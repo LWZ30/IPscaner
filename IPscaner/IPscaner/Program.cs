@@ -39,7 +39,7 @@ namespace ConApp
             Console.WriteLine("请输入扫描的端口 例如：1-800");
             string portRange = Console.ReadLine();
             Console.WriteLine("开始扫描请等待");
-
+            
             //IP地址段转换为单独IP
             startHost = hostRange.Split('-')[0].Trim();
             endHost = hostRange.Split('-')[1].Trim();
@@ -64,6 +64,7 @@ namespace ConApp
             endPort = int.Parse(portRange.Split('-')[1].Trim());
             for (int i = 0; i < ip_result.Count; i++)
             {
+                DateTime dt1 = System.DateTime.Now;
                 // Console.WriteLine("***开始扫描****" + ip_result[i]);
                 scannedCount = 0;
                 runningThreadCount = 0;
@@ -71,6 +72,7 @@ namespace ConApp
 
                 for (int port = startPort; port <= endPort; port++)
                 {
+                    Console.Write("\b\\");
                     PortScan scanner = new PortScan(ip_result[i].ToString(), port);
                     Thread thread = new Thread(new ThreadStart(scanner.Scan));
                     thread.Name = port.ToString();
@@ -78,14 +80,17 @@ namespace ConApp
                     thread.Start();
 
                     runningThreadCount++;
-                    Thread.Sleep(2);
-
+                    //Thread.Sleep(2);
+                    Console.Write("\b/");
                     //循环，直到某个线程工作完毕才启动另一新线程，也可以叫做推拉窗技术
                     while (runningThreadCount >= maxThread) ;
                 }
                 //输出结果
                 Console.Write("IP：{0} 开放端口：{1}个 ", ip_result[i], openedPorts.Count);
                 //空循环，直到所有端口扫描完毕
+                DateTime dt2 = System.DateTime.Now;
+                TimeSpan ts = dt2.Subtract(dt1);
+                Console.Write("\t运行时间 {0}", ts.TotalSeconds);
                 foreach (int port in openedPorts)
                 {
                     Console.Write("\t{0}", port.ToString().PadLeft(6));
