@@ -3,7 +3,9 @@
 //===========================================================
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+
 
 namespace ConApp
 {
@@ -28,18 +30,24 @@ namespace ConApp
         //地址池
         //static string[] ip_result = new string[255];
         static List<string> ip_result = new List<string>();
+        //常规扫描端口
+        static int[] ports = { 21,22,23,80,8080,135,139,445,3306,1433 };
         static void Main(string[] args)
         {
             //简单提示
             Console.WriteLine("//************************************");
             Console.WriteLine("//  网络端口批量扫描");
+            var postsDump = ObjectDumper.Dump(ports);
+            Console.Write(postsDump);
             Console.WriteLine("//************************************");
             Console.WriteLine("请输入要扫描的主机 例如192.168.1.1-192.168.1.254");
             string hostRange = Console.ReadLine();
-            Console.WriteLine("请输入扫描的端口 例如：1-800");
-            string portRange = Console.ReadLine();
-            Console.WriteLine("开始扫描请等待");
-            
+            //Console.WriteLine("请输入扫描的端口 例如：1-800");
+            //string portRange = Console.ReadLine();
+            Console.WriteLine("开始扫描");
+           
+           
+
             //IP地址段转换为单独IP
             startHost = hostRange.Split('-')[0].Trim();
             endHost = hostRange.Split('-')[1].Trim();
@@ -60,8 +68,8 @@ namespace ConApp
                 }
             }
 
-            startPort = int.Parse(portRange.Split('-')[0].Trim());
-            endPort = int.Parse(portRange.Split('-')[1].Trim());
+            //startPort = int.Parse(portRange.Split('-')[0].Trim());
+            //endPort = int.Parse(portRange.Split('-')[1].Trim());
             for (int i = 0; i < ip_result.Count; i++)
             {
                 DateTime dt1 = System.DateTime.Now;
@@ -70,7 +78,8 @@ namespace ConApp
                 runningThreadCount = 0;
                 openedPorts = new List<int>();
 
-                for (int port = startPort; port <= endPort; port++)
+                // for (int port = startPort; port <= endPort; port++)
+                foreach (int port in ports)
                 {
                     Console.Write("\b\\");
                     PortScan scanner = new PortScan(ip_result[i].ToString(), port);
@@ -80,21 +89,27 @@ namespace ConApp
                     thread.Start();
 
                     runningThreadCount++;
-                    //Thread.Sleep(2);
+                    Thread.Sleep(2);
                     Console.Write("\b/");
                     //循环，直到某个线程工作完毕才启动另一新线程，也可以叫做推拉窗技术
                     while (runningThreadCount >= maxThread) ;
+                    Console.Write("\b");
                 }
                 //输出结果
                 Console.Write("IP：{0} 开放端口：{1}个 ", ip_result[i], openedPorts.Count);
                 //空循环，直到所有端口扫描完毕
-                DateTime dt2 = System.DateTime.Now;
-                TimeSpan ts = dt2.Subtract(dt1);
-                Console.Write("\t运行时间 {0}", ts.TotalSeconds);
-                foreach (int port in openedPorts)
+                //DateTime dt2 = System.DateTime.Now;
+                //TimeSpan ts = dt2.Subtract(dt1);
+                //Console.Write("\t运行时间 {0}", ts.TotalSeconds);
+                if (openedPorts.Count>0)
                 {
-                    Console.Write("\t{0}", port.ToString().PadLeft(6));
+                    foreach (int item in openedPorts)
+                    {
+                        Console.Write("\t{0}", item.ToString().PadLeft(6));
+                    }
+                    openedPorts.Clear();
                 }
+                
                 //while (scannedCount + 1 < (endPort - startPort)) ;
                 Console.WriteLine();
             }
